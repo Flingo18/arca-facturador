@@ -38,6 +38,13 @@ test('firma CMS válida que contiene el TRA', () => {
   assert.equal(p7.certificates.length, 1);
 });
 
+test('firma CMS aunque cert y clave lleguen sin líneas BEGIN/END', () => {
+  const { cert, key } = certDePrueba();
+  const sinHeaders = (p) => p.replace(/-----[^-]+-----/g, '').trim();
+  const b64 = firmarCMS(crearTRA('wsfe'), sinHeaders(cert), sinHeaders(forge.pki.privateKeyInfoToPem(forge.pki.wrapRsaPrivateKey(forge.pki.privateKeyToAsn1(forge.pki.privateKeyFromPem(key))))));
+  assert.ok(b64.length > 100);
+});
+
 test('toXml respeta orden y omite undefined', () => {
   const xml = toXml({ A: 1, B: undefined, C: { D: 'x&y' } });
   assert.equal(xml, '<ar:A>1</ar:A><ar:C><ar:D>x&amp;y</ar:D></ar:C>');
