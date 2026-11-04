@@ -4,12 +4,12 @@
 // { ok, cuit, razonSocial, condicionIva, domicilioFiscal, estadoCuit, tipoPersona, actividades, categoriaMonotributo, avisos }
 // condicionIva usa los mismos valores que la base Clientes de Notion.
 
-import { getConfig } from '../lib/config.js';
+import { cargarConfig } from '../lib/config.js';
 import { json, autorizado, errorRespuesta } from '../lib/http.js';
 import { consultarCuit } from '../lib/padron.js';
 
 export default async function handler(req, res) {
-  const cfg = getConfig();
+  const cfg = await cargarConfig();
   if (!autorizado(req, cfg)) return json(res, 401, { ok: false, error: 'No autorizado' });
   try {
     const url = new URL(req.url, 'http://x');

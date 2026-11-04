@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Facturador ARCA · Configuración</title>
+<style>
+  :root {
+    --bg: #f6f5f1; --card: #ffffff; --ink: #1d1c1a; --muted: #6b6860; --line: #e3e0d8;
+    --accent: #2f5d50; --done: #b8d8c4; --accent-ink: #ffffff; --ok: #2f7a4a; --warn: #9a6410; --err: #a33a2c; --code: #f1efe9;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #151514; --card: #1e1e1c; --ink: #eceae4; --muted: #a29f96; --line: #33322e;
+      --accent: #7fb8a6; --accent-ink: #10201b; --ok: #7cc597; --warn: #e0b060; --err: #f08a7a; --code: #262623; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 32px 16px 80px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  section.off { opacity: .5; pointer-events: none; }
+  h2 { font-size: 18px; margin: 0 0 6px; display: flex; gap: 10px; align-items: center; }
+  .n { flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 14px; display: grid; place-items: center; }
+  .done .n { background: var(--ok); }
+  .done h2::after { content: '✓ listo'; margin-left: auto; font-size: 13px; color: var(--ok); font-weight: 600; }
+  p.help { color: var(--muted); margin: 0 0 14px; font-size: 15px; }
+  label { display: block; font-size: 14px; font-weight: 600; margin: 12px 0 4px; }
+  label small { font-weight: 400; color: var(--muted); }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); font: inherit; }
+  textarea { font: 12px/1.4 ui-monospace, Menlo, monospace; min-height: 120px; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+  button { margin-top: 14px; padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: inherit; font-weight: 600; cursor: pointer; }
+  button.sec { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  button:disabled { opacity: .6; cursor: wait; }
+  .msg { margin-top: 12px; font-size: 15px; }
+  .msg.ok { color: var(--ok); } .msg.err { color: var(--err); } .msg.warn { color: var(--warn); }
+  ol.arca { margin: 0; padding-left: 20px; } ol.arca li { margin: 4px 0; }
+  code, .pill { background: var(--code); padding: 1px 6px; border-radius: 5px; font-size: 14px; }
+  .copy { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+  .copy input { font-family: ui-monospace, Menlo, monospace; font-size: 14px; }
+  .copy button { margin: 0; white-space: nowrap; }
+  ul.check { list-style: none; padding: 0; margin: 10px 0 0; } ul.check li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Facturador ARCA</h1>
+  <p class="sub">Configurá tu app en 7 pasos. Los pasos 4 y 6 se hacen en la web de ARCA, con tu clave fiscal.</p>
+
+  <section id="s0">
+    <h2><span class="n">1</span>Clave de instalación</h2>
+    <p class="help">Es la clave que inventaste al crear el proyecto en Vercel (la variable <code>API_SECRET</code>).</p>
+    <label for="secret">Clave de instalación</label>
+    <input id="secret" type="password" autocomplete="off">
+    <button id="entrar">Entrar</button>
+    <div class="msg" id="m0"></div>
+  </section>
+
+  <section id="s1" class="off">
+    <h2><span class="n">2</span>Tus datos</h2>
+    <p class="help">Salen en el PDF de cada factura. Copialos de tu constancia de inscripción.</p>
+    <div class="grid">
+      <div><label for="cuit">CUIT <small>(solo números)</small></label><input id="cuit" inputmode="numeric"></div>
+      <div><label for="razonSocial">Nombre o razón social</label><input id="razonSocial"></div>
+      <div><label for="domicilio">Domicilio fiscal</label><input id="domicilio"></div>
+      <div><label for="inicioActividades">Inicio de actividades <small>(dd/mm/aaaa)</small></label><input id="inicioActividades" placeholder="01/03/2024"></div>
+      <div><label for="iibb">Ingresos Brutos</label><input id="iibb" placeholder="Régimen Simplificado / Exento / N° de inscripción"></div>
+      <div><label for="condicionIva">Condición frente al IVA</label>
+        <select id="condicionIva"><option>Responsable Monotributo</option><option>IVA Sujeto Exento</option></select></div>
+      <div><label for="ptoVta">Punto de venta <small>(lo creás en el paso 6)</small></label><input id="ptoVta" inputmode="numeric" placeholder="2"></div>
+      <div><label for="entorno">Modo</label>
+        <select id="entorno"><option value="produccion">Real (facturas válidas)</option><option value="homologacion">Pruebas de ARCA (sin validez)</option></select></div>
+    </div>
+    <button id="guardarDatos">Guardar datos</button>
+    <div class="msg" id="m1"></div>
+  </section>
+
+  <section id="s2" class="off">
+    <h2><span class="n">3</span>Pedido de certificado</h2>
+    <p class="help">La app crea su propia clave secreta (queda guardada cifrada en tu proyecto) y un archivo de pedido para ARCA.</p>
+    <button id="generar">Generar pedido de certificado</button>
+    <div id="csrBox" hidden>
+      <p class="help" style="margin-top:14px">Descargá este archivo: lo vas a subir en ARCA en el paso siguiente.</p>
+      <button id="bajarCsr">Descargar pedido.csr</button>
+      <button class="sec" id="copiarCsr">Copiar texto</button>
+    </div>
+    <div class="msg" id="m2"></div>
+  </section>
+
+  <section id="s3" class="off">
+    <h2><span class="n">4</span>En ARCA: crear el certificado</h2>
+    <ol class="arca">
+      <li>Entrá a ARCA con clave fiscal y abrí <b>Administración de Certificados Digitales</b>. Si no aparece, agregala desde <i>Administrador de Relaciones → Adherir servicio</i>.</li>
+      <li>Tocá <b>Agregar alias</b>, escribí <span class="pill">facturadornotion</span> y elegí el archivo <b>pedido.csr</b>.</li>
+      <li>Tocá <b>Agregar alias</b> y después <b>Ver</b> → descargá el certificado (archivo <code>.crt</code>).</li>
+    </ol>
+  </section>
+
+  <section id="s4" class="off">
+    <h2><span class="n">5</span>Subir el certificado</h2>
+    <p class="help">Elegí el archivo que descargaste de ARCA (o pegá su texto).</p>
+    <input id="certFile" type="file" accept=".crt,.pem,.cer,.txt">
+    <label for="certTxt">o pegalo acá</label>
+    <textarea id="certTxt" placeholder="-----BEGIN CERTIFICATE-----"></textarea>
+    <button id="subirCert">Guardar certificado</button>
+    <div class="msg" id="m4"></div>
+  </section>
+
+  <section id="s5" class="off">
+    <h2><span class="n">6</span>En ARCA: autorizar y crear el punto de venta</h2>
+    <ol class="arca">
+      <li><b>Administrador de Relaciones</b> → <b>Nueva relación</b> → Buscar → <i>ARCA → WebServices → Facturación Electrónica</i>. En Representante elegí el computador fiscal <span class="pill">facturadornotion</span> y confirmá.</li>
+      <li>Repetí lo mismo con el servicio <i>Consulta de constancia de inscripción</i> (sirve para completar los datos de tus clientes).</li>
+      <li>Abrí <b>Administración de puntos de venta y domicilios</b> → <b>Agregar</b>. Elegí el sistema <i>Factura Electrónica - Monotributo - Web Services</i> y anotá el número. Ese número va en el paso 2.</li>
+    </ol>
+  </section>
+
+  <section id="s6" class="off">
+    <h2><span class="n">7</span>Probar la conexión</h2>
+    <p class="help">Chequea que ARCA te reconozca y que el punto de venta exista. No emite ninguna factura.</p>
+    <button id="probar">Probar conexión con ARCA</button>
+    <ul class="check" id="checks"></ul>
+    <div class="msg" id="m6"></div>
+    <div id="n8nBox" hidden>
+      <p class="help" style="margin-top:16px">Listo. Estos son los dos datos que vas a cargar en n8n:</p>
+      <label>Dirección de la app</label>
+      <div class="copy"><input id="appUrl" readonly><button class="sec" data-copy="appUrl">Copiar</button></div>
+      <label>Clave</label>
+      <p class="help" style="margin:0">La misma clave de instalación del paso 1.</p>
+    </div>
+  </section>
+</main>
+<script>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  let secreto = '';
+  let csrTexto = '';
+  try { secreto = sessionStorage.getItem('arcaSecret') || ''; } catch (e) {}
+  $('secret').value = secreto;
+
+  function msg(id, texto, tipo) { const el = $(id); el.textContent = texto || ''; el.className = 'msg ' + (tipo || ''); }
+  function activar(ids) { ids.forEach((id) => $(id).classList.remove('off')); }
+  function hecho(id, si) { $(id).classList.toggle('done', !!si); }
+
+  async function api(metodo, ruta, body) {
+    const r = await fetch(ruta, {
+      method: metodo,
+      headers: Object.assign({ 'x-api-key': secreto }, body ? { 'Content-Type': 'application/json' } : {}),
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    let data = {};
+    try { data = await r.json(); } catch (e) { data = { ok: false, error: 'Respuesta inválida (' + r.status + ')' }; }
+    if (!r.ok || data.ok === false) throw new Error(data.error || ('Error ' + r.status));
+    return data;
+  }
+
+  async function conBoton(btn, fn) {
+    btn.disabled = true;
+    try { await fn(); } finally { btn.disabled = false; }
+  }
+
+  function pintar(e) {
+    activar(['s1', 's2', 's3', 's4', 's5', 's6']);
+    hecho('s0', true);
+    if (!e.baseConectada) msg('m0', 'Falta conectar la base Upstash al proyecto en Vercel (ver la guía).', 'warn');
+    $('cuit').value = e.cuit || '';
+    $('ptoVta').value = e.ptoVta && e.cuit ? e.ptoVta : '';
+    $('entorno').value = e.cuit && e.entorno === 'homologacion' ? 'homologacion' : 'produccion';
+    ['razonSocial', 'domicilio', 'inicioActividades', 'iibb'].forEach((k) => { $(k).value = (e.emisor && e.emisor[k]) || ''; });
+    if (e.emisor && e.emisor.condicionIva) $('condicionIva').value = e.emisor.condicionIva;
+    hecho('s1', e.cuit && e.emisor && e.emisor.razonSocial);
+    csrTexto = e.csr || '';
+    $('csrBox').hidden = !csrTexto;
+    hecho('s2', e.tieneClave && !e.claveIlegible);
+    if (e.claveIlegible) msg('m2', 'La clave guardada no se puede leer (cambió la clave de instalación). Generá un pedido nuevo.', 'warn');
+    const c = e.certificado;
+    if (c && !c.error) {
+      hecho('s3', true); hecho('s4', true);
+      msg('m4', 'Certificado cargado: alias ' + c.alias + ', vence el ' + c.vence + (c.coincideConClave === false ? ' — NO coincide con la clave' : ''), c.coincideConClave === false ? 'err' : 'ok');
+    } else if (c && c.error) {
+      msg('m4', c.error, 'err');
+    }
+    $('appUrl').value = location.origin;
+  }
+
+  async function entrar() {
+    secreto = $('secret').value.trim();
+    try { sessionStorage.setItem('arcaSecret', secreto); } catch (e) {}
+    msg('m0', 'Verificando…');
+    try { pintar(await api('GET', '/api/setup')); if (!$('m0').classList.contains('warn')) msg('m0', 'Entraste.', 'ok'); }
+    catch (e) { msg('m0', e.message, 'err'); }
+  }
+
+  $('entrar').onclick = () => conBoton($('entrar'), entrar);
+  $('secret').addEventListener('keydown', (ev) => { if (ev.key === 'Enter') entrar(); });
+
+  $('guardarDatos').onclick = () => conBoton($('guardarDatos'), async () => {
+    msg('m1', 'Guardando…');
+    try {
+      const body = { accion: 'datos' };
+      ['cuit', 'razonSocial', 'domicilio', 'inicioActividades', 'iibb', 'condicionIva', 'ptoVta', 'entorno'].forEach((k) => { body[k] = $(k).value; });
+      pintar(await api('POST', '/api/setup', body));
+      msg('m1', 'Datos guardados.', 'ok');
+    } catch (e) { msg('m1', e.message, 'err'); }
+  });
+
+  async function generar(reemplazar) {
+    msg('m2', 'Generando… (tarda unos segundos)');
+    try {
+      pintar(await api('POST', '/api/setup', { accion: 'generar-csr', reemplazar: reemplazar }));
+      msg('m2', 'Pedido generado. Descargalo y seguí con el paso 4.', 'ok');
+    } catch (e) {
+      if (/Ya hay un certificado/.test(e.message)) {
+        msg('m2', e.message + ' Tocá de nuevo el botón para generar uno nuevo igual.', 'warn');
+        $('generar').dataset.reemplazar = '1';
+      } else msg('m2', e.message, 'err');
+    }
+  }
+  $('generar').onclick = () => conBoton($('generar'), () => generar($('generar').dataset.reemplazar === '1'));
+
+  $('bajarCsr').onclick = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([csrTexto], { type: 'application/pkcs10' }));
+    a.download = 'pedido.csr';
+    a.click();
+  };
+  $('copiarCsr').onclick = () => { navigator.clipboard.writeText(csrTexto).then(() => msg('m2', 'Copiado.', 'ok')); };
+
+  $('certFile').onchange = () => {
+    const f = $('certFile').files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => { $('certTxt').value = String(r.result); };
+    r.readAsText(f);
+  };
+
+  $('subirCert').onclick = () => conBoton($('subirCert'), async () => {
+    const pem = $('certTxt').value.trim();
+    if (!pem) return msg('m4', 'Elegí el archivo o pegá el certificado.', 'err');
+    msg('m4', 'Guardando…');
+    try { pintar(await api('POST', '/api/setup', { accion: 'certificado', pem: pem })); }
+    catch (e) { msg('m4', e.message, 'err'); }
+  });
+
+  $('probar').onclick = () => conBoton($('probar'), async () => {
+    const ul = $('checks'); ul.innerHTML = ''; $('n8nBox').hidden = true;
+    const linea = (ok, t) => { const li = document.createElement('li'); li.textContent = (ok ? '✅ ' : '❌ ') + t; ul.appendChild(li); };
+    msg('m6', 'Consultando a ARCA…');
+    try {
+      const e = await api('GET', '/api/estado?parametros=1');
+      linea(true, 'ARCA reconoce tu certificado (modo ' + (e.entorno === 'produccion' ? 'real' : 'pruebas') + ')');
+      const pv = (e.parametros.puntosDeVenta || []).find((p) => p.nro === e.ptoVta);
+      if (e.entorno === 'homologacion') linea(true, 'En modo pruebas cualquier punto de venta sirve');
+      else if (!pv) linea(false, 'El punto de venta ' + e.ptoVta + ' no existe como Web Services. Revisá el paso 6 y el número del paso 2.');
+      else if (pv.bloqueado === 'S') linea(false, 'El punto de venta ' + e.ptoVta + ' está bloqueado en ARCA.');
+      else linea(true, 'Punto de venta ' + e.ptoVta + ' listo (' + pv.tipo + ')');
+      linea(true, 'Última Factura C emitida en ese punto de venta: ' + (e.ultimaFacturaC || 'ninguna todavía'));
+      const todoOk = e.entorno === 'homologacion' || (pv && pv.bloqueado !== 'S');
+      msg('m6', todoOk ? 'Todo listo para facturar.' : 'Falta un detalle, revisá lo marcado.', todoOk ? 'ok' : 'warn');
+      hecho('s5', todoOk); hecho('s6', todoOk);
+      $('n8nBox').hidden = !todoOk;
+    } catch (e) {
+      let t = e.message;
+      if (/notAuthorized|no autorizado|Computador no autorizado/i.test(t)) t = 'ARCA todavía no autorizó el certificado para Facturación Electrónica. Revisá el paso 6 (a veces tarda unos minutos).';
+      linea(false, t);
+      msg('m6', '', '');
+    }
+  });
+
+  document.querySelectorAll('[data-copy]').forEach((b) => {
+    b.onclick = () => navigator.clipboard.writeText($(b.dataset.copy).value).then(() => { b.textContent = 'Copiado'; setTimeout(() => { b.textContent = 'Copiar'; }, 1500); });
+  });
+
+  if (secreto) entrar();
+})();
+</script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Genera la clave privada y el pedido de certificado (CSR) para los web services de ARCA.
-# Uso (Mac/Linux):  bash scripts/generar-csr.sh 20123456789 "Felipe Apellido" homologacion
+# Uso (Mac/Linux):  bash scripts/generar-csr.sh 20123456789 "Nombre Apellido" homologacion
 #
 # Deja en ~/arca-certs/<entorno>/:
 #   arca.key  → clave privada. NO la compartas ni la subas a ningún lado salvo a Vercel.

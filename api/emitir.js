@@ -19,14 +19,14 @@
 //   "incluirPdf": true                   // default true
 // }
 
-import { getConfig } from '../lib/config.js';
+import { cargarConfig } from '../lib/config.js';
 import { json, autorizado, leerBody, errorRespuesta } from '../lib/http.js';
 import { mapearReceptor, mapearMoneda, validarImporte } from '../lib/mapeo.js';
 import { emitirFacturaC } from '../lib/wsfe.js';
 import { generarPDF, numeroFormateado } from '../lib/pdf.js';
 
 export default async function handler(req, res) {
-  const cfg = getConfig();
+  const cfg = await cargarConfig();
   if (req.method !== 'POST') return json(res, 405, { ok: false, error: 'Usar POST' });
   if (!autorizado(req, cfg)) return json(res, 401, { ok: false, error: 'No autorizado' });
 

@@ -2,7 +2,7 @@
   "name": "arca-facturador",
   "version": "0.1.0",
   "private": true,
-  "description": "Emisión de Factura C (monotributo) contra los web services de ARCA (WSAA + WSFEv1), pensado para dispararse desde n8n/Notion.",
+  "description": "Emisión de Factura C (monotributo) contra los web services de ARCA (WSAA + WSFEv1), con asistente de instalación y pensado para dispararse desde Notion vía n8n.",
   "type": "module",
   "engines": {
     "node": ">=20"
