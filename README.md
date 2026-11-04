@@ -11,7 +11,7 @@ Emití **Factura C** (monotributo) directo contra los web services de ARCA, sin 
 
 1. Tocá el botón y seguí los pasos de Vercel. Te va a pedir una **clave de instalación** (`API_SECRET`): inventá una larga y guardala.
 
-   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FFlingo18%2Farca-facturador&project-name=facturador-arca&repository-name=facturador-arca&env=API_SECRET&envDescription=Invent%C3%A1%20una%20clave%20larga%20(20%20caracteres%20o%20m%C3%A1s).%20La%20vas%20a%20usar%20en%20la%20p%C3%A1gina%20de%20configuraci%C3%B3n%20y%20en%20n8n.)
+   [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FFlingo18%2Farca-facturador&project-name=facturador-arca&repository-name=facturador-arca&env=API_SECRET&envDescription=Invent%C3%A1%20una%20clave%20larga%20(20%20caracteres%20o%20m%C3%A1s)%20y%20guardala%3A%20la%20vas%20a%20usar%20para%20entrar%20a%20la%20p%C3%A1gina%20de%20configuraci%C3%B3n.)
 
 2. En el proyecto de Vercel: **Storage → Create Database → Upstash for Redis** (plan gratis) → **Connect** al proyecto. Después **Deployments → ⋯ → Redeploy**.
 3. Abrí la dirección de tu app (por ejemplo `https://facturador-arca-xxxx.vercel.app`). Ahí está el asistente de configuración: tus datos, el certificado de ARCA, la prueba de conexión, la conexión con Notion y las direcciones para los botones.
