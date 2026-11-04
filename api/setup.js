@@ -5,14 +5,16 @@
 // POST /api/setup { accion: "datos", ... }         → guarda CUIT, punto de venta, entorno y datos del PDF
 // POST /api/setup { accion: "generar-csr" }        → crea clave privada + pedido de certificado (CSR)
 // POST /api/setup { accion: "certificado", pem }   → guarda el certificado descargado de ARCA
+// POST /api/setup { accion: "notion", token }      → guarda el token de la integración de Notion
 
 import forge from 'node-forge';
 import { generateKeyPairSync } from 'node:crypto';
-import { getConfig, cargarConfig } from '../lib/config.js';
+import { getConfig, cargarConfig, claveBotones } from '../lib/config.js';
 import { json, autorizado, leerBody, errorRespuesta } from '../lib/http.js';
 import { leerAjustes, guardarAjustes } from '../lib/ajustes.js';
 import { hayKv } from '../lib/cache.js';
 import { envolverPem, leerClave } from '../lib/wsaa.js';
+import { notion } from '../lib/notion.js';
 
 const ALIAS = 'facturadornotion';
 
@@ -46,6 +48,8 @@ function estado(cfg, a) {
     claveIlegible: Boolean(a.keyIlegible),
     csr: a.csr || null,
     certificado: infoCertificado(cfg.cert, cfg.key),
+    notion: { conectado: Boolean(cfg.notionToken), nombre: a.notionBot || null, ilegible: Boolean(a.notionTokenIlegible) },
+    claveBotones: claveBotones(cfg),
     origen: {
       cuit: fuente('ARCA_CUIT', a.cuit),
       certificado: fuente('ARCA_CERT', a.cert),
@@ -130,6 +134,16 @@ export default async function handler(req, res) {
         });
       }
       await guardarAjustes(base, { cert: pem, csr: null });
+    } else if (body.accion === 'notion') {
+      const token = texto(body.token, 300);
+      if (!token) return json(res, 400, { ok: false, error: 'Pegá el token de la integración de Notion' });
+      let yo;
+      try {
+        yo = await notion({ notionToken: token }, '/users/me');
+      } catch {
+        return json(res, 400, { ok: false, error: 'Notion rechazó ese token. Copiá de nuevo el "Secreto de integración interna".' });
+      }
+      await guardarAjustes(base, { notionToken: token, notionBot: yo.name || yo.bot?.workspace_name || 'integración' });
     } else {
       return json(res, 400, { ok: false, error: 'Acción desconocida' });
     }

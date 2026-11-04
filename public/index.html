@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Facturador ARCA · Configuración</title>
+<title>Facturador ARCA</title>
 <style>
   :root {
     --bg: #f6f5f1; --card: #ffffff; --ink: #1d1c1a; --muted: #6b6860; --line: #e3e0d8;
@@ -41,13 +41,14 @@
   .copy { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
   .copy input { font-family: ui-monospace, Menlo, monospace; font-size: 14px; }
   .copy button { margin: 0; white-space: nowrap; }
+  a { color: var(--accent); }
   ul.check { list-style: none; padding: 0; margin: 10px 0 0; } ul.check li { margin: 4px 0; }
 </style>
 </head>
 <body>
 <main>
   <h1>Facturador ARCA</h1>
-  <p class="sub">Configurá tu app en 7 pasos. Los pasos 4 y 6 se hacen en la web de ARCA, con tu clave fiscal.</p>
+  <p class="sub">Configurá tu app en 9 pasos. Los pasos 4 y 6 se hacen en la web de ARCA (con tu clave fiscal) y el 8 y 9 en Notion.</p>
 
   <section id="s0">
     <h2><span class="n">1</span>Clave de instalación</h2>
@@ -123,13 +124,34 @@
     <button id="probar">Probar conexión con ARCA</button>
     <ul class="check" id="checks"></ul>
     <div class="msg" id="m6"></div>
-    <div id="n8nBox" hidden>
-      <p class="help" style="margin-top:16px">Listo. Estos son los dos datos que vas a cargar en n8n:</p>
-      <label>Dirección de la app</label>
-      <div class="copy"><input id="appUrl" readonly><button class="sec" data-copy="appUrl">Copiar</button></div>
-      <label>Clave</label>
-      <p class="help" style="margin:0">La misma clave de instalación del paso 1.</p>
-    </div>
+  </section>
+  <section id="s7" class="off">
+    <h2><span class="n">8</span>Conectar Notion</h2>
+    <ol class="arca">
+      <li>Duplicá el template <b>Facturá en ARCA desde Notion</b> en tu Notion (botón <i>Duplicar</i>, arriba a la derecha).</li>
+      <li>Abrí <a href="https://www.notion.so/profile/integrations" target="_blank" rel="noopener">notion.so/profile/integrations</a> → <b>Nueva integración</b>. Ponele de nombre <span class="pill">Facturador ARCA</span>, tipo <b>Interna</b>, elegí tu espacio de trabajo y guardá.</li>
+      <li>Copiá el <b>Secreto de integración interna</b> y pegalo acá abajo.</li>
+      <li>Volvé a la página del template en Notion → <b>⋯</b> (arriba a la derecha) → <b>Conexiones</b> → agregá <i>Facturador ARCA</i>. Así la app puede leer y completar Facturas y Clientes.</li>
+    </ol>
+    <label for="notionToken">Secreto de integración</label>
+    <input id="notionToken" type="password" autocomplete="off" placeholder="ntn_…">
+    <button id="guardarNotion">Conectar Notion</button>
+    <div class="msg" id="m7"></div>
+  </section>
+
+  <section id="s8" class="off">
+    <h2><span class="n">9</span>Botones de Notion</h2>
+    <p class="help">Cada botón del template manda la página a tu app. Editá el botón (clic derecho → <i>Editar</i>), en la acción <b>Enviar webhook</b> pegá la dirección y guardá.</p>
+    <label>Botón 🧾 Emitir factura (base Facturas)</label>
+    <div class="copy"><input id="urlEmitir" readonly><button class="sec" data-copy="urlEmitir">Copiar</button></div>
+    <label>Botón 🔎 Completar con ARCA (base Clientes)</label>
+    <div class="copy"><input id="urlCliente" readonly><button class="sec" data-copy="urlCliente">Copiar</button></div>
+    <p class="help" style="margin-top:16px"><b>¿Notion gratis?</b> Las acciones de webhook son de los planes pagos. En ese caso agregá en cada base una propiedad <b>Fórmula</b> con esto y usala como link:</p>
+    <label>Fórmula para Facturas</label>
+    <div class="copy"><input id="formEmitir" readonly><button class="sec" data-copy="formEmitir">Copiar</button></div>
+    <label>Fórmula para Clientes</label>
+    <div class="copy"><input id="formCliente" readonly><button class="sec" data-copy="formCliente">Copiar</button></div>
+    <p class="help" style="margin-top:16px">Listo: cargá un cliente con su CUIT, tocá <b>Completar con ARCA</b>, creá una factura y tocá <b>Emitir factura</b>.</p>
   </section>
 </main>
 <script>
@@ -162,7 +184,7 @@
   }
 
   function pintar(e) {
-    activar(['s1', 's2', 's3', 's4', 's5', 's6']);
+    activar(['s1', 's2', 's3', 's4', 's5', 's6', 's7', 's8']);
     hecho('s0', true);
     if (!e.baseConectada) msg('m0', 'Falta conectar la base Upstash al proyecto en Vercel (ver la guía).', 'warn');
     $('cuit').value = e.cuit || '';
@@ -182,7 +204,15 @@
     } else if (c && c.error) {
       msg('m4', c.error, 'err');
     }
-    $('appUrl').value = location.origin;
+    const n = e.notion || {};
+    hecho('s7', n.conectado && !n.ilegible);
+    if (n.ilegible) msg('m7', 'El token guardado no se puede leer (cambió la clave de instalación). Pegalo de nuevo.', 'warn');
+    else if (n.conectado) msg('m7', 'Notion conectado' + (n.nombre ? ' (' + n.nombre + ')' : '') + '.', 'ok');
+    const base = location.origin + '/api/notion/';
+    $('urlEmitir').value = base + 'emitir?key=' + e.claveBotones;
+    $('urlCliente').value = base + 'cliente?key=' + e.claveBotones;
+    $('formEmitir').value = 'link("🧾 Emitir", "' + base + 'emitir?key=' + e.claveBotones + '&page=" + id())';
+    $('formCliente').value = 'link("🔎 Completar", "' + base + 'cliente?key=' + e.claveBotones + '&page=" + id())';
   }
 
   async function entrar() {
@@ -245,7 +275,7 @@
   });
 
   $('probar').onclick = () => conBoton($('probar'), async () => {
-    const ul = $('checks'); ul.innerHTML = ''; $('n8nBox').hidden = true;
+    const ul = $('checks'); ul.innerHTML = '';
     const linea = (ok, t) => { const li = document.createElement('li'); li.textContent = (ok ? '✅ ' : '❌ ') + t; ul.appendChild(li); };
     msg('m6', 'Consultando a ARCA…');
     try {
@@ -260,13 +290,20 @@
       const todoOk = e.entorno === 'homologacion' || (pv && pv.bloqueado !== 'S');
       msg('m6', todoOk ? 'Todo listo para facturar.' : 'Falta un detalle, revisá lo marcado.', todoOk ? 'ok' : 'warn');
       hecho('s5', todoOk); hecho('s6', todoOk);
-      $('n8nBox').hidden = !todoOk;
     } catch (e) {
       let t = e.message;
       if (/notAuthorized|no autorizado|Computador no autorizado/i.test(t)) t = 'ARCA todavía no autorizó el certificado para Facturación Electrónica. Revisá el paso 6 (a veces tarda unos minutos).';
       linea(false, t);
       msg('m6', '', '');
     }
+  });
+
+  $('guardarNotion').onclick = () => conBoton($('guardarNotion'), async () => {
+    const token = $('notionToken').value.trim();
+    if (!token) return msg('m7', 'Pegá el secreto de la integración.', 'err');
+    msg('m7', 'Conectando…');
+    try { pintar(await api('POST', '/api/setup', { accion: 'notion', token: token })); $('notionToken').value = ''; }
+    catch (e) { msg('m7', e.message, 'err'); }
   });
 
   document.querySelectorAll('[data-copy]').forEach((b) => {
