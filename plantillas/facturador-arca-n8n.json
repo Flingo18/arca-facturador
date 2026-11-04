@@ -1,0 +1,881 @@
+{
+  "name": "Facturador ARCA desde Notion",
+  "nodes": [
+    {
+      "id": "427d681d-c5d1-4e8b-8b9c-6929ea5d4a51",
+      "name": "Cambió una factura",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        224
+      ],
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "event": "pagedUpdatedInDatabase",
+        "dataSourceId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "simple": false
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "3e65b303-5925-46e8-9e59-a1c9a2e42a4b",
+      "name": "⚙️ Configuración",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        320
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "app-url",
+              "name": "appUrl",
+              "value": "https://PEGA-ACA-LA-DIRECCION-DE-TU-APP.vercel.app",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "fc9013a2-66cc-4fa4-b438-eebc31a84fb6",
+      "name": "Cambió un cliente",
+      "type": "n8n-nodes-base.notionTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        416
+      ],
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "event": "pagedUpdatedInDatabase",
+        "dataSourceId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "simple": false
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "18877627-5aaf-4215-abef-584e4982ed51",
+      "name": "¿Qué hay que hacer?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        448,
+        320
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "Emitir factura",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.properties?.Estado?.select?.name === 'Emitir' && (($json.properties?.['Número']?.rich_text ?? []).map(t => t.plain_text).join('').trim() === '') }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "Buscar cliente en ARCA",
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose"
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.properties?.['Buscar en ARCA']?.checkbox === true }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "true",
+                      "singleValue": true
+                    },
+                    "rightValue": ""
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "073a6c1f-26b7-48dc-a834-d202d5c31a5a",
+      "name": "Marcar Emitiendo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        128
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('⚙️ Configuración').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{ \"properties\": { \"Estado\": { \"select\": { \"name\": \"Emitiendo\" } }, \"Error\": { \"rich_text\": [] } } }",
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "70e6f126-6821-4ebe-a602-e594ac332359",
+      "name": "Traer cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        896,
+        128
+      ],
+      "parameters": {
+        "url": "={{ 'https://api.notion.com/v1/pages/' + ($('⚙️ Configuración').item.json.properties?.Cliente?.relation?.[0]?.id ?? 'sin-cliente') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "da0c09a1-37ce-4283-9412-0ed434ac5695",
+      "name": "Armar datos de la factura",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        128
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const p = $('⚙️ Configuración').item.json.properties || {};\nconst c = $json.object === 'page' ? ($json.properties || {}) : null;\nconst txt = (prop) => ((prop && (prop.rich_text || prop.title)) || []).map(t => t.plain_text).join('').trim();\nconst sel = (prop) => (prop && prop.select && prop.select.name) || '';\nconst hoy = $now.setZone('America/Argentina/Buenos_Aires').toISODate();\nconst fail = (msg) => ({ json: { ok: false, error: msg } });\n\nif (!c) return fail('La factura no tiene un cliente elegido (o n8n no tiene acceso a la base Clientes).');\n\nconst importe = p['Importe'] ? p['Importe'].number : null;\nif (!importe || importe <= 0) return fail('El importe está vacío o en cero.');\n\nconst periodo = (p['Período'] && p['Período'].date) || {};\nconst vence = p['Vence'] && p['Vence'].date ? p['Vence'].date.start : null;\n\nreturn {\n  json: {\n    ok: true,\n    body: {\n      importe: Math.round(importe * 100) / 100,\n      moneda: 'ARS',\n      descripcion: txt(p['Concepto']) || 'Servicios',\n      periodoDesde: periodo.start || hoy,\n      periodoHasta: periodo.end || periodo.start || hoy,\n      vencimiento: vence && vence >= hoy ? vence : hoy,\n      receptor: {\n        nombre: txt(c['Razón social']) || txt(c['Nombre']),\n        tipoDocumento: sel(c['Tipo de documento']),\n        nroDocumento: txt(c['Nro de documento']),\n        condicionIva: sel(c['Condición IVA']),\n        domicilio: txt(c['Domicilio fiscal'])\n      }\n    }\n  }\n};"
+      }
+    },
+    {
+      "id": "702809ff-1e10-48d4-bd3a-4ac3dbbabd0c",
+      "name": "¿Datos completos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        128
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "f8e007df-5ca2-4150-a444-6e054a8016a5",
+      "name": "Emitir en ARCA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1568,
+        48
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('⚙️ Configuración').item.json.appUrl.trim().replace(/\\/+$/, '') + '/api/emitir' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Facturador ARCA — clave"
+        }
+      }
+    },
+    {
+      "id": "e078f8c1-0a81-4621-a39e-896fa1cccc2e",
+      "name": "¿ARCA autorizó?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        48
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok === true && !!$json.cae }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "2be7ff3e-4935-4628-87c8-c98f0bd936a4",
+      "name": "Guardar factura en Notion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2016,
+        0
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('⚙️ Configuración').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { \"Estado\": { select: { name: \"Emitida\" } }, \"Número\": { rich_text: [{ text: { content: $json.numero } }] }, \"CAE\": { rich_text: [{ text: { content: String($json.cae) } }] }, \"Vto CAE\": { date: { start: $json.vtoCae } }, \"Fecha\": { date: { start: $json.fecha } }, \"Error\": { rich_text: [] } } }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "9d027b66-4837-446b-8e63-ba964636fe04",
+      "name": "Crear subida del PDF",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.notion.com/v1/file_uploads",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ mode: \"single_part\", filename: $(\"Emitir en ARCA\").item.json.pdfNombre, content_type: \"application/pdf\" }) }}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "36e24587-1f2c-4cb4-bda3-055b90adb48c",
+      "name": "Preparar PDF",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2464,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const f = $('Emitir en ARCA').item.json;\nconst data = await this.helpers.prepareBinaryData(Buffer.from(f.pdfBase64, 'base64'), f.pdfNombre, 'application/pdf');\nreturn { json: { uploadId: $json.id }, binary: { file: data } };"
+      }
+    },
+    {
+      "id": "0152842d-93a1-49a2-80c2-acc3007ae602",
+      "name": "Subir PDF a Notion",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2688,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.notion.com/v1/file_uploads/' + $json.uploadId + '/send' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "e67899ec-6ffc-4d33-8cec-90c130005aeb",
+      "name": "Adjuntar PDF a la factura",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2912,
+        0
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('⚙️ Configuración').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { \"PDF\": { files: [{ type: \"file_upload\", file_upload: { id: $json.id }, name: $(\"Emitir en ARCA\").item.json.pdfNombre }] } } }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "b34d6a07-7cae-45d3-84c8-4055d6a2601a",
+      "name": "Marcar error en la factura",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2016,
+        224
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('⚙️ Configuración').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { \"Estado\": { select: { name: \"Error\" } }, \"Error\": { rich_text: [{ text: { content: String($json.error ?? \"No se pudo conectar con la app de facturación. Revisá la dirección en ⚙️ Configuración.\").slice(0, 1900) } }] } } }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "baf29455-9f4b-401d-b21a-b24d47b3e7eb",
+      "name": "Consultar padrón ARCA",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        672,
+        416
+      ],
+      "parameters": {
+        "url": "={{ $('⚙️ Configuración').item.json.appUrl.trim().replace(/\\/+$/, '') + '/api/padron?cuit=' + encodeURIComponent(($json.properties?.['Nro de documento']?.rich_text ?? []).map(t => t.plain_text).join('').replace(/\\D/g, '')) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 60000,
+          "response": {
+            "response": {
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "Facturador ARCA — clave"
+        }
+      }
+    },
+    {
+      "id": "6f11f57a-9c17-43c5-a8c3-b350b1fae739",
+      "name": "¿ARCA devolvió datos?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        896,
+        416
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok === true && !!$json.razonSocial }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "rightValue": ""
+            }
+          ],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "0b211948-3bef-4eac-8c7e-7a28f117eba3",
+      "name": "Completar datos del cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        320
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('⚙️ Configuración').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { \"Razón social\": { rich_text: [{ text: { content: $json.razonSocial } }] }, \"Condición IVA\": { select: { name: $json.condicionIva } }, \"Tipo de documento\": { select: { name: \"CUIT\" } }, \"Nro de documento\": { rich_text: [{ text: { content: $json.cuit } }] }, \"Domicilio fiscal\": { rich_text: [{ text: { content: $json.domicilioFiscal || \"\" } }] }, \"Buscar en ARCA\": { checkbox: false }, \"Datos ARCA\": { rich_text: [{ text: { content: (\"Consultado \" + $now.setZone(\"America/Argentina/Buenos_Aires\").toFormat(\"dd/MM/yyyy HH:mm\") + \" · CUIT \" + ($json.estadoCuit || \"s/d\") + ($json.categoriaMonotributo ? \" · Categoría \" + $json.categoriaMonotributo : \"\") + (($json.avisos || []).length ? \" · Avisos: \" + $json.avisos.join(\" | \") : \"\")).slice(0, 1900) } }] } } }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "fadf921a-6aa7-4b00-a3ad-4d31d8011a0d",
+      "name": "Anotar error en el cliente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1120,
+        512
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ 'https://api.notion.com/v1/pages/' + $('⚙️ Configuración').item.json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "notionApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Notion-Version",
+              "value": "2022-06-28"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ properties: { \"Buscar en ARCA\": { checkbox: false }, \"Datos ARCA\": { rich_text: [{ text: { content: (\"No se pudo consultar (\" + $now.setZone(\"America/Argentina/Buenos_Aires\").toFormat(\"dd/MM/yyyy HH:mm\") + \"): \" + String($json.error ?? \"sin respuesta de la app. Revisá la dirección en ⚙️ Configuración.\")).slice(0, 1900) } }] } } }) }}",
+        "options": {}
+      },
+      "credentials": {
+        "notionApi": {
+          "name": "Notion — Facturador"
+        }
+      }
+    },
+    {
+      "id": "9b3beb78-acab-44b7-b6ac-dfc9a707ee79",
+      "name": "Cómo configurarlo",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -336
+      ],
+      "parameters": {
+        "content": "## Facturador ARCA desde Notion\n\n**Para dejarlo andando:**\n1. En **Cambió una factura** elegí tu base *Facturas*; en **Cambió un cliente**, tu base *Clientes*.\n2. En **⚙️ Configuración** pegá la dirección de tu app de Vercel.\n3. Revisá que cada nodo tenga la credencial elegida (Notion y la clave de la app).\n4. Activá el workflow (arriba a la derecha).\n\n**Uso:** en Notion poné una factura en *Emitir*, o tildá *Buscar en ARCA* en un cliente. n8n lo toma en menos de un minuto.",
+        "color": 4,
+        "width": 384,
+        "height": 400
+      }
+    }
+  ],
+  "connections": {
+    "Cambió una factura": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Configuración",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚙️ Configuración": {
+      "main": [
+        [
+          {
+            "node": "¿Qué hay que hacer?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cambió un cliente": {
+      "main": [
+        [
+          {
+            "node": "⚙️ Configuración",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Qué hay que hacer?": {
+      "main": [
+        [
+          {
+            "node": "Marcar Emitiendo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Consultar padrón ARCA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Emitiendo": {
+      "main": [
+        [
+          {
+            "node": "Traer cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Traer cliente": {
+      "main": [
+        [
+          {
+            "node": "Armar datos de la factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar datos de la factura": {
+      "main": [
+        [
+          {
+            "node": "¿Datos completos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Datos completos?": {
+      "main": [
+        [
+          {
+            "node": "Emitir en ARCA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar error en la factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Emitir en ARCA": {
+      "main": [
+        [
+          {
+            "node": "¿ARCA autorizó?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿ARCA autorizó?": {
+      "main": [
+        [
+          {
+            "node": "Guardar factura en Notion",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Marcar error en la factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar factura en Notion": {
+      "main": [
+        [
+          {
+            "node": "Crear subida del PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear subida del PDF": {
+      "main": [
+        [
+          {
+            "node": "Preparar PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar PDF": {
+      "main": [
+        [
+          {
+            "node": "Subir PDF a Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir PDF a Notion": {
+      "main": [
+        [
+          {
+            "node": "Adjuntar PDF a la factura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar padrón ARCA": {
+      "main": [
+        [
+          {
+            "node": "¿ARCA devolvió datos?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿ARCA devolvió datos?": {
+      "main": [
+        [
+          {
+            "node": "Completar datos del cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Anotar error en el cliente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
