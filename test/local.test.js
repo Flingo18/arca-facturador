@@ -45,6 +45,25 @@ test('firma CMS aunque cert y clave lleguen sin líneas BEGIN/END', () => {
   assert.ok(b64.length > 100);
 });
 
+test('padrón: interpreta monotributista y responsable inscripto', async () => {
+  const { interpretarPersona } = await import('../lib/padron.js');
+  const mono = interpretarPersona({
+    datosGenerales: { idPersona: '20123456789', apellido: 'PEREZ', nombre: 'JUAN', estadoClave: 'ACTIVO', domicilioFiscal: { direccion: 'CALLE 1', descripcionProvincia: 'CIUDAD AUTONOMA BUENOS AIRES', codPostal: '1425' } },
+    datosMonotributo: { categoriaMonotributo: { descripcionCategoria: 'C' } },
+  });
+  assert.equal(mono.razonSocial, 'PEREZ JUAN');
+  assert.equal(mono.condicionIva, 'Monotributo');
+  assert.equal(mono.domicilioFiscal, 'CALLE 1, CABA (1425)');
+  const ri = interpretarPersona({
+    datosGenerales: { idPersona: '30712345678', razonSocial: 'EMPRESA SRL', domicilioFiscal: { direccion: 'AV X 100', localidad: 'ROSARIO', descripcionProvincia: 'SANTA FE', codPostal: '2000' } },
+    datosRegimenGeneral: { impuesto: [{ idImpuesto: '30' }, { idImpuesto: '10' }] },
+    errorConstancia: { error: 'domicilio no confirmado' },
+  });
+  assert.equal(ri.condicionIva, 'Responsable Inscripto');
+  assert.equal(ri.domicilioFiscal, 'AV X 100, ROSARIO, SANTA FE (2000)');
+  assert.deepEqual(ri.avisos, ['domicilio no confirmado']);
+});
+
 test('toXml respeta orden y omite undefined', () => {
   const xml = toXml({ A: 1, B: undefined, C: { D: 'x&y' } });
   assert.equal(xml, '<ar:A>1</ar:A><ar:C><ar:D>x&amp;y</ar:D></ar:C>');
