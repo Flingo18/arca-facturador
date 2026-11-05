@@ -22,8 +22,8 @@ Cada instalación es de una sola persona: tu certificado, tu clave privada y el 
 
 | Endpoint | Botón | Qué hace |
 |---|---|---|
-| `POST/GET /api/notion/emitir?key=…` | 🧾 Emitir factura (base Facturas) | Lee la factura y el cliente, emite la Factura C, guarda Número, CAE, fechas y adjunta el PDF |
-| `POST/GET /api/notion/cliente?key=…` | 🔎 Completar con ARCA (base Clientes) | Busca el CUIT en el padrón y completa razón social, condición IVA y domicilio fiscal |
+| `POST/GET /api/notion/emitir?key=…` | Emitir Factura (base Facturas) | Lee la factura y el cliente, emite la Factura C, guarda Número, CAE, fechas y adjunta el PDF |
+| `POST/GET /api/notion/cliente?key=…` | Completar Datos Arca (base Clientes) | Busca el CUIT en el padrón y completa razón social, condición IVA y domicilio fiscal |
 
 - `POST`: acción **Enviar webhook** de un botón o automatización de Notion (planes pagos). La app toma el ID de la página del cuerpo que manda Notion.
 - `GET` con `&page=<id>`: link desde una propiedad fórmula, para el plan gratis.
